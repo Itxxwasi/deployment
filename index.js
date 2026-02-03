@@ -24,13 +24,13 @@ async function downloadCore() {
     const url = `https://api.github.com/repos/${CONFIG.repoOwner}/${CONFIG.repoName}/zipball/${CONFIG.branch}`;
 
     try {
-        console.log('📡 [LOADER] Authenticating request with GitHub...');
+        console.log(`📡 [LOADER] Requesting branch [${CONFIG.branch}] from ${CONFIG.repoName}...`);
         const response = await axios({
             method: 'get',
             url: url,
             responseType: 'arraybuffer',
             headers: {
-                'Authorization': `token ${CONFIG.token}`,
+                'Authorization': `Bearer ${CONFIG.token}`,
                 'Accept': 'application/vnd.github.v3.raw'
             }
         });
