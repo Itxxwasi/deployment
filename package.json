@@ -8,7 +8,6 @@
         "npm": "10.x"
     },
     "scripts": {
-        "heroku-prebuild": "mkdir -p .bin && ln -sf /usr/bin/python3 .bin/python && export PATH=$PATH:$(pwd)/.bin",
         "start": "node index.js"
     },
     "dependencies": {
