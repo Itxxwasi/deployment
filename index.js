@@ -63,6 +63,13 @@ async function downloadCore() {
     }
 }
 
+const express = require('express');
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.get('/', (req, res) => res.send('WASI-MD-V7 Loader is running! 🤖'));
+app.get('/health', (req, res) => res.status(200).json({ status: 'ok' }));
+
 async function startBot(corePath) {
     console.log('🚀 [LOADER] Finalizing system environment...');
 
@@ -95,19 +102,33 @@ async function startBot(corePath) {
     });
 
     botProcess.on('close', (code) => {
-        console.log(`[LOADER] Bot process exited with code ${code}. Restarting in 5s...`);
-        setTimeout(() => init(), 5000);
+        console.log(`[LOADER] Bot process exited with code ${code}. Restarting in 10s...`);
+        setTimeout(() => downloadAndStart(), 10000);
     });
 }
 
+async function downloadAndStart() {
+    try {
+        const corePath = await downloadCore();
+        await startBot(corePath);
+    } catch (err) {
+        console.error('❌ [LOADER] Fatal error during startup:', err.message);
+    }
+}
+
 async function init() {
+    // 1. Start Web Server first for Heroku
+    app.listen(PORT, () => {
+        console.log(`🌐 [LOADER] Web server active on port ${PORT}`);
+    });
+
     if (!CONFIG.token) {
-        console.error('❌ [LOADER] GITHUB_TOKEN is missing in environment variables.');
-        process.exit(1);
+        console.error('❌ [LOADER] GITHUB_TOKEN is missing!');
+        return;
     }
 
-    const corePath = await downloadCore();
-    await startBot(corePath);
+    // 2. Begin Download/Startup
+    await downloadAndStart();
 }
 
 init();
