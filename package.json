@@ -3,6 +3,10 @@
     "version": "7.0.0",
     "description": "WASI-MD WhatsApp Bot - Modular & High Performance",
     "main": "index.js",
+    "engines": {
+        "node": "20.x",
+        "npm": "10.x"
+    },
     "scripts": {
         "start": "node index.js"
     },

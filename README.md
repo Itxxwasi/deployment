@@ -15,7 +15,10 @@ This is a **loader repository**. To deploy the bot, follow these steps:
    - `REPO_OWNER`: `muhammadwaseemxdevloperbygoogle`
    - `REPO_NAME`: `nanobanan`
    - `MONGODB_URI`: Your MongoDB connection string.
-4. Deploy to **Heroku**, **Koyeb**, or a **VPS**.
+4. **Heroku Specifics** (If deploying to Heroku):
+   - Add the APT buildpack: `heroku buildpacks:add --index 1 https://github.com/heroku/heroku-buildpack-apt`
+   - Ensure you have Python and FFmpeg available (Handled by `Aptfile`).
+5. Deploy to **Heroku**, **Koyeb**, or a **VPS**.
 
 ## 🛡️ Privacy & Security
 The core logic of this bot is loaded dynamically from a secure private backend. This ensures you always have the latest updates and bug fixes without needing to manually sync your fork every time.
