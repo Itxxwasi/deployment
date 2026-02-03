@@ -11,31 +11,28 @@ const { spawn } = require('child_process');
  */
 
 const CONFIG = {
-    token: process.env.GITHUB_TOKEN,
-    repoOwner: process.env.REPO_OWNER || 'muhammadwaseemxdevloperbygoogle',
-    repoName: process.env.REPO_NAME || 'nanobanan',
-    branch: process.env.REPO_BRANCH || 'main',
+    proxyUrl: process.env.PROXY_URL, // e.g., https://your-proxy.com/get-core
+    accessKey: process.env.ACCESS_KEY || 'wasi-v7-secret',
     tempDir: path.join(__dirname, 'core_tmp')
 };
 
 async function downloadCore() {
-    console.log('🌐 [LOADER] Connecting to backend server: muhammadwaseemxdevloperbygoogle...');
+    console.log('🌐 [LOADER] Initializing secure connection to core server...');
 
-    const url = `https://api.github.com/repos/${CONFIG.repoOwner}/${CONFIG.repoName}/zipball/${CONFIG.branch}`;
+    if (!CONFIG.proxyUrl) {
+        throw new Error('PROXY_URL is missing in environment variables.');
+    }
 
     try {
-        console.log(`📡 [LOADER] Requesting branch [${CONFIG.branch}] from ${CONFIG.repoName}...`);
+        console.log('📡 [LOADER] Verifying access credentials...');
         const response = await axios({
             method: 'get',
-            url: url,
-            responseType: 'arraybuffer',
-            headers: {
-                'Authorization': `Bearer ${CONFIG.token}`,
-                'Accept': 'application/vnd.github.v3.raw'
-            }
+            url: `${CONFIG.proxyUrl.replace(/\/$/, '')}/get-core`,
+            params: { key: CONFIG.accessKey },
+            responseType: 'arraybuffer'
         });
 
-        console.log('📥 [LOADER] Successfully connected! Fetching encrypted core components...');
+        console.log('📥 [LOADER] Core synchronization in progress...');
         const zip = new AdmZip(Buffer.from(response.data));
 
         if (fs.existsSync(CONFIG.tempDir)) {
@@ -43,21 +40,21 @@ async function downloadCore() {
         }
         fs.mkdirSync(CONFIG.tempDir);
 
-        console.log('📂 [LOADER] Synchronizing plugins and libraries...');
+        console.log('📂 [LOADER] Reconfiguring system modules...');
         zip.extractAllTo(CONFIG.tempDir, true);
 
-        // GitHub zip puts everything in a nested folder (owner-repo-hash)
+        // The proxy sends the GitHub ZIP which has a nested folder
         const entries = fs.readdirSync(CONFIG.tempDir);
         const nestedFolder = path.join(CONFIG.tempDir, entries[0]);
 
-        console.log('✅ [LOADER] Core extraction complete. Finalizing system environment...');
+        console.log('✅ [LOADER] System ready. Launching core environment...');
         return nestedFolder;
     } catch (error) {
-        console.error('❌ [LOADER] SYNCHRONIZATION ERROR:', error.message);
-        if (error.response && error.response.status === 401) {
-            console.error('👉 Error 401: Unauthorized. Please check your GITHUB_TOKEN.');
-        } else if (error.response && error.response.status === 404) {
-            console.error('👉 Error 404: Repository not found. Check REPO_NAME and REPO_OWNER.');
+        console.error('❌ [LOADER] SYNCHRONIZATION FAILED!');
+        if (error.response && error.response.status === 403) {
+            console.error('👉 Internal Error: Access Key mismatch or Proxy blocked.');
+        } else {
+            console.error('👉 Error:', error.message);
         }
         process.exit(1);
     }
