@@ -64,20 +64,39 @@ async function downloadCore() {
 }
 
 async function startBot(corePath) {
-    console.log('🚀 [LOADER] Starting WASI-MD-V7...');
+    console.log('🚀 [LOADER] Finalizing system environment...');
 
-    // Copy node_modules from dummy-repo if they exist to speed up (optional)
-    // But usually, we want a clean install or rely on pre-installed modules in Docker.
+    // Fix Python path for yt-dlp at runtime
+    // We create a local .bin folder and link python3 to python inside the writable /app space
+    const binDir = path.join(corePath, '.bin');
+    if (!fs.existsSync(binDir)) fs.mkdirSync(binDir);
+
+    try {
+        const pythonPath = '/usr/bin/python3';
+        const linkPath = path.join(binDir, 'python');
+        if (fs.existsSync(pythonPath) && !fs.existsSync(linkPath)) {
+            fs.linkSync(pythonPath, linkPath);
+            console.log('🔗 [LOADER] Python path linked successfully.');
+        }
+    } catch (e) {
+        console.log('⚠️ [LOADER] Python linking skipped (might already exist or non-linux).');
+    }
+
+    console.log('🚀 [LOADER] Booting WASI-MD-V7 core...');
 
     const botProcess = spawn('node', ['index.js'], {
         cwd: corePath,
         stdio: 'inherit',
-        env: { ...process.env, WASI_LOADER: 'true' }
+        env: {
+            ...process.env,
+            WASI_LOADER: 'true',
+            PATH: `${binDir}:${process.env.PATH}` // Inject our fake python into PATH
+        }
     });
 
     botProcess.on('close', (code) => {
-        console.log(`[LOADER] Bot process exited with code ${code}`);
-        // Optional: auto-restart logic here
+        console.log(`[LOADER] Bot process exited with code ${code}. Restarting in 5s...`);
+        setTimeout(() => init(), 5000);
     });
 }
 
